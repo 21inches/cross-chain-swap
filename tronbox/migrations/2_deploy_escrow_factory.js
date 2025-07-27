@@ -5,16 +5,16 @@ module.exports = function (deployer, network, accounts) {
     console.log("Network:", network);
     console.log("Accounts:", accounts[0]);
 
-    const lopAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
+    const lopAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf"; // TODO
 
     // 2. Fee Token Address (Using USDT for Nile)
-    const feeTokenAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
+    const feeTokenAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf"; // TODO
 
     // 3. Access Token Address (0xACCe... converted to Base58)
-    const accessTokenAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
+    const accessTokenAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf"; // TODO
 
     // 4. Fee Bank Owner
-    const feeBankOwnerAddress = accounts;
+    const feeBankOwnerAddress = accounts; // TODO
 
     // 5. & 6. Rescue Delay (8 days in seconds)
     const rescueDelay = 691200;
