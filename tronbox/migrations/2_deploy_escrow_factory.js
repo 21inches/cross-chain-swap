@@ -5,7 +5,7 @@ module.exports = function (deployer, network, accounts) {
     console.log("Network:", network);
     console.log("Accounts:", accounts[0]);
 
-    const lopAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf"; // TODO
+    const lopAddress = "TAYjAyuKjKvkhkcvgJ7CgrJ8PVziU5vr4R";
 
     // 2. Fee Token Address (Using USDT for Nile)
     const feeTokenAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf"; // TODO
