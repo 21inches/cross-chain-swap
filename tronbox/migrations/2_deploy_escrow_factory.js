@@ -8,7 +8,7 @@ module.exports = function (deployer, network, accounts) {
     const lopAddress = "TAYjAyuKjKvkhkcvgJ7CgrJ8PVziU5vr4R";
 
     // 2. Fee Token Address (Using USDT for Nile)
-    const feeTokenAddress = "TUrzzZSyCtu2aXdkxnwUqNpqBgoodrbN8Y";
+    const feeTokenAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
 
     // 3. Access Token Address
     const accessTokenAddress = "TUdoqfVVJviAdDYMgJPSnGbfVo64eyq2D1";
