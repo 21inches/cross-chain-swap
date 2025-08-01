@@ -35,12 +35,12 @@ module.exports = {
       // An object with the same schema as the settings entry in the Input JSON.
       // See https://docs.soliditylang.org/en/latest/using-the-compiler.html#input-description
       settings: {
-        // optimizer: {
-        //   enabled: true,
-        //   runs: 200
-        // },
-        // evmVersion: 'istanbul',
-        // viaIR: true,
+        optimizer: {
+          enabled: true,
+          runs: 1000000
+        },
+        evmVersion: 'shanghai',
+        viaIR: true,
       }
     }
   }
