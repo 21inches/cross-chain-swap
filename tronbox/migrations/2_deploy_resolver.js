@@ -7,7 +7,7 @@ const configs = {
     },
     nile: {
         lop: "TAYjAyuKjKvkhkcvgJ7CgrJ8PVziU5vr4R",
-        escrowFactory: "THEb78FZnopZYvKpJvRcmicZLcewdmxURR"
+        escrowFactory: "THVQCzNgJxTvBRH297tmHXuxVdcahipy3f"
     },
 };
 
@@ -19,7 +19,7 @@ module.exports = function (deployer, network, accounts) {
     const initialOwner = accounts;
 
     console.log("----------------------------------------------------");
-    console.log("Deploying EscrowFactory with the following arguments:");
+    console.log("Deploying Resolver with the following arguments:");
     console.log(`  1. EscrowFactory:   ${configs[network].escrowFactory}`);
     console.log(`  2. LOP:             ${configs[network].lop}`);
     console.log("----------------------------------------------------");
