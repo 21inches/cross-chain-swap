@@ -1,120 +1,41 @@
-# 1inch Network Fusion Atomic Swaps
+## Contract Addresses
 
-[![Build Status](https://github.com/1inch/cross-chain-swap/workflows/CI/badge.svg)](https://github.com/1inch/cross-chain-swap/actions)
-[![Coverage Status](https://codecov.io/gh/1inch/cross-chain-swap/graph/badge.svg?token=gOb8pdfcxg)](https://codecov.io/gh/1inch/cross-chain-swap)
+### Ethereum Sepolia (Chain ID: 11155111)
 
-Atomic Swap is a two-party swap mechanism, optimized for EVM-compatible chains with well-aligned incentives to ensure fair and fast execution for all participants.
+- **LOP**: `0x32a209c3736c5bd52e395eabc86b9bca4f602985`
+- **Escrow Factory**: `0x61a32a9263c6ff568c66799a94f8fe09c1db7a66`
+- **Resolver**: `0xe002e8e986fd4bbff58b49423c7f7e0e0e92cc59`
+- **BLT Token**: `0x0BF8E91b08b242cD7380bC92385C90c8270b37f0`
+- **Escrow Src Implementation**: `0xa17ddb01f03a42e0070a0e25099cf3d27b705fff`
+- **Escrow Dst Implementation**: `0x7490329e69ab8e298a32dc59493034e4d02a5ccf`
+- **True ERC20**: `0x6dFe5DA3C989aB142CfB16a8FfA2B0e640b1d821`
 
-This protocol implies some off-chain mechanism to verify the created escrow and distribute user defined secret.
+### Base Sepolia (Chain ID: 84532)
 
-## Design
-### Key protocol entities
-- `EscrowSrc` clones hold the user's tokens and `EscrowDst` clones hold the resolver's tokens. Both allow tokens to be withdrawn to the recipient.
-- `EscrowFactory` deploys `EscrowSrc` and `EscrowDst` clones for each swap.
+- **LOP**: `0xe30f9abbadc1eb84b41d41035b2a2c7d0bd5f9b2`
+- **Escrow Factory**: `0x178ddaca4499a89e40826ec247baf608051edf9e`
+- **Resolver**: `0x3fe279B56F330304446522F04907fBBe03Fe236a`
+- **BLT Token**: `0xbb7f72d58f5F7147CBa030Ba4c46a94a07E4c2CA`
+- **Escrow Src Implementation**: `0xe55061a78bf30e7f38410b90a6a167d5621cc068`
+- **Escrow Dst Implementation**: `0x0418b6e80a602474fbfadc3a2594413fe68496bb`
+- **True ERC20**: `0x8bD9f7C82eBF9D9C830a76bAcb0E99A52163B304`
 
-### General concept
-#### Set up two escrows
-Resolvers play a major role in the execution of transactions. The user off-chain signs an order, which the Resolver then executes on-chain via the [Limit Order Protocol](https://github.com/1inch/limit-order-protocol). As a result, an `EscrowSrc` clone is created on the source chain, where the user's tokens are stored. Then, Resolver deploys the `EscrowDst` clone to the destination chain and deposits tokens that will go to the user at the end of the swap. Also, Resolver deposits in escrow clones safety deposit in native tokens on both chains.
+### Etherlink Testnet (Chain ID: 128123)
 
-Important aspects of deploying clone contracts:
-- The swap parameters used to deploy both clones must be relevant and match where applicable, otherwise the secret will not be given to the Resolver. This applies, for example, to the hash of an order or of a user's secret.
-- Unlike a regular token swap, the taking token in the order will not be the token the user wants to receive, but a token that always returns `true` instead of a transfer. This is due to the need to send real taking tokens to a user on a different chain.
+- **LOP**: `0x942DFf5Af350fd0816Bd03C91729633C293dB5dA`
+- **Escrow Factory**: `0x54B6335e1daEed822d2f06Bf5D5c97b7423e319d`
+- **Resolver**: `0xa7c76ECE64a9c7ea863bb324a9451f903e1D0996`
+- **BLT Token**: `0xb84b2c6c0d554263Eab9f56DEeA8523347270A11`
+- **Escrow Src Implementation**: `0xdb2c3b4de9e6943da03afaff9dacaee861eb7f39`
+- **Escrow Dst Implementation**: `0xa16d7bc6b95a3ab7b2a2514cd58ddc18732aa74a`
+- **True ERC20**: `0x8382515C25930D298e3B64Eb397005f9Ae71fc0C`
 
-#### Withdraw tokens
-Once the Resolver has received the secret, it becomes possible to use it to withdraw tokens to the user on the destination chain and to the Resolver itself on the source chain. If the Resolver fails to withdraw tokens to a user within a certain period of time, this option is open to all other Resolvers. The motivation for them to do so is the safety deposit, which is sent to the token withdrawer.
+### Monad Testnet (Chain ID: 10143)
 
-#### Cancel swap
-If none of the Resolvers wanted to withdraw tokens to the user on the destination chain, then after a certain period the Resolver can cancel the escrow and reclaim their tokens. The same possibility arises for a Resolver after some time on the source chain, but in this case the tokens will be sent back to the user. If the Resolver has not cancelled the escrow on the source chain within a certain period of time, this option is available to other Resolvers. The motivation for them is the same as for withdrawals: the safety deposit is sent to the one who cancels the escrow.
-
-### Timelocks
-The time periods in which certain escrow operations are available are defined by `Timelocks`. They contain the duration of the periods in seconds relative to the deployment timestamp. To get information about a particular period, including its start, the `TimelocksLib` library is used. The following image shows the periods and their mutual arrangement:
-
-![Timelocks](timelocks.png)
-*Key stages of Atomic Swap*
-
-### Rescue funds
-After a period set when `EscrowSrc` and `EscrowDst` contracts are deployed, Resolver has an option to withdraw assets that are accidentally stuck on a contract. The `rescueFunds` function is implemented for this purpose.
-
-### Partial fills
-Order can be split into a number of equal parts and can be partially filled. For `N` parts there will be generated `N + 1` secrets to be used later in escrows. Each secret is indexed and prorated to the cumulative values of all fills done. A Merkle tree is built from all secrets where the leaf is `keccak256(index, hashedSecret)`. Each Resolver has a copy of the created Merkle tree and uses it to fill part of the order. Index of the hashed secret used to create escrows corresponds to the fill percentage. The secret with index `N` should be used for final complete fill.
-
-For example, if the order is divided into four parts (25% each), the index of the required hashed secret is:
-- `0` for (0%, 25%] fill
-- `1` for (25%, 50%]
-- `2` for (50%, 75%]
-- `3` for (75%, 100%), `N-1`
-- `4` for 100% completion, `N`
-
-Hashlock cannot be reused, so if order part completion was unsuccessful and escrows were cancelled, other secrets should be used. Thus, the next attempt must include at least the unfilled amount from the failed attempt plus some extra tokens to result in the next index of hashed secret.
-
-### Contracts deployed once for the chain
-For each chain participating in the Atomic Swap mechanism, one copy of the `EscrowSrc`, `EscrowDst` and `EscrowFactory` contracts is deployed. They each contain a set of functions that need to be called to execute the swap.
-
-### One-time contracts for each swap
-The `EscrowSrc` or `EscrowDst` contract itself does not hold tokens for the swap. Instead, for each swap, a proxy contract is deployed on each of the chains involved in the swap. Address of the contract is determined by the swap parameters.
-
-To deploy a proxy contract on the source chain the order signed by the user must be filled. On the destination chain call the `createEscrowDst` function.
-
-### Functions for Resolver to use
-#### Deploy Escrow clones
-1. `EscrowFactory.addressOfEscrowSrc` to get the future `EscrowSrc` clone contract address on the source chain. This is to send the safety deposit in native tokens before the order is filled.
-2. Limit Order Protocol [OrderMixin.sol](https://github.com/1inch/limit-order-protocol/blob/master/contracts/OrderMixin.sol):
-    - `fillOrderArgs` or `fillContractOrderArgs` to fill the Fusion order and deploy the `EscrowSrc` clone on the source chain.
-3. `EscrowFactory.createDstEscrow` on the destination chain to deploy the `EscrowDst` clone.
-
-#### Withdraw tokens
-1. `Escrow.withdraw` to withdraw tokens.
-2. `Escrow.withdrawTo` to withdraw tokens to the specified address on the source chain.
-3. `EscrowDst.publicWithdraw` to withdraw tokens during the public withdrawal period.
-
-
-#### Cancel escrows
-1. `Escrow.cancel` to cancel escrow.
-2. `EscrowSrc.publicCancel` to cancel escrow during the public cancellation period.
-
-## Security considerations
-The security of protocol transactions is affected by the off-chain distribution of the user's secret. It is recommended to pay proper attention to the implementation of this process.
-Resolvers are recommended to watch for the event emitted in `EscrowDst.publicWithdraw` function. If the secret hasn't been received, it can be retrieved from the mentioned event. This will allow the Resolver to withdraw tokens on the source chain before escrow is cancelled.
-
-## Local development
-
-This project uses [Foundry](https://github.com/foundry-rs/foundry) for smart contract development in Solidity. Foundry is a fast, portable, and modular toolkit designed to compile, test, and deploy Solidity contracts.
-
-### Prerequisites
-
-- Ensure you have [Rust](https://www.rust-lang.org/tools/install) installed.
-- To [install Foundry](https://book.getfoundry.sh/getting-started/installation), including the `forge` tool, follow these steps:
-
-  ``` shell
-  # Install Foundryup:
-  curl -L https://foundry.paradigm.xyz | bash
-  
-  # Apply updated config to current terminal session
-  source ~/.zshenv
-  
-  # Install forge, cast, anvil, and chisel
-  foundryup
-  ```
-
-### Build
-
-To install submodules and compile contracts run:
-
-``` shell
-forge build
-```
-
-### Test
-
-To execute tests run:
-
-``` shell
-yarn test
-```
-
-## How to setup pre-commit hooks
-
-Run the following commands in your terminal:
-```bash
-chmod +x hooks/pre-commit && cp hooks/pre-commit .git/hooks/pre-commit
-```
+- **LOP**: `0xFCf9F11666Adb060D03Bb873954673f90914bAdE`
+- **Escrow Factory**: `0xb84b2c6c0d554263Eab9f56DEeA8523347270A11`
+- **Resolver**: `0x0642d9dE03A087588b39dBc844edE137e81f504E`
+- **BLT Token**: `0x60c13fAcC3d2363fa4c1D4c8A0456a4FeBc98903`
+- **Escrow Src Implementation**: `0xb067a3695e316f4d6f42ef047cac941a3f0298f1`
+- **Escrow Dst Implementation**: `0x4a2d6954c17ff9be4af9b0c9a74e2d0ff4cf128d`
+- **True ERC20**: `0xE4F87948Efd25651CA20d8b0d750d94612f3FCB7`
